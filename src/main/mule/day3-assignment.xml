@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:batch="http://www.mulesoft.org/schema/mule/batch" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:file="http://www.mulesoft.org/schema/mule/file"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/batch http://www.mulesoft.org/schema/mule/batch/current/mule-batch.xsd">
+	<file:config name="File_Config" doc:name="File Config" doc:id="1c74ffe4-9fa1-44db-bb09-47203f2c111a" >
+		<file:connection workingDir="/home/sairaghav/AnypointStudio/studio-workspace/mule/day3/input" />
+	</file:config>
+	<flow name="day3-assignmentFlow" doc:id="44ca7f74-0701-4055-9694-577a52ea10cd" >
+		<file:listener doc:name="On New or Updated File" doc:id="1a704d6d-5c31-4827-81ab-73da50b670cf" config-ref="File_Config" autoDelete="true" moveToDirectory="/home/sairaghav/AnypointStudio/studio-workspace/mule/day3/archive" renameTo="'SourceFile_' ++ (now() as String {format:'yyyy-MM-dd-hh-mm-ss.SSS'}) ++ '.json'" outputMimeType="application/csv" directory="/home/sairaghav/AnypointStudio/studio-workspace/mule/day3/input">
+			<scheduling-strategy >
+				<fixed-frequency frequency="5000" />
+			</scheduling-strategy>
+		</file:listener>
+		<ee:transform doc:name="Transform Message" doc:id="3cba339d-b6ec-413d-bd68-83a5612a2605">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload groupBy $.Country pluck $]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="8ed112d1-ab70-470c-80e3-862d0a16c1dc" />
+		<ee:transform doc:name="Transform Message" doc:id="af64f11f-6043-41a6-aeb4-4e484e606019" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload groupBy $.Country pluck $]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<batch:job jobName="day3-assignmentBatch_Job" doc:id="e3bcaf77-7ad9-4306-8258-105b10d380cc" blockSize="3">
+			<batch:process-records>
+				<batch:step name="Batch_Step" doc:id="333bfde8-4f2f-45c9-8e91-c5be2e355e05" >
+					<logger level="INFO" doc:name="Logger" doc:id="41d4d6cf-f64a-406d-9b0e-30cb7624421c" message="Batch step started -  #[payload]"/>
+					<ee:transform doc:name="Transform Message" doc:id="ca9f12db-37c0-4a15-8d91-e585709c4515">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+var countryProfiles = payload map(data, index) ->  {
+	country : data.Country[0],
+	Profiles: data groupBy $.RecordType pluck $ map (data, index) -> {
+		RecordType : data.RecordType[0],
+	    count: sizeOf(data)
+	}
+}
+---
+countryProfiles]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+					<logger level="INFO" doc:name="Logger" doc:id="f2bf5eb9-7cf0-4b06-9683-b1ed41774b19" message="Batch step ended -  #[payload]"/>
+				</batch:step>
+			</batch:process-records>
+		</batch:job>
+	</flow>
+</mule>

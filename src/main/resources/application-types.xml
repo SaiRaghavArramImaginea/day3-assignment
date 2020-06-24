@@ -1,0 +1,50 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<types:mule xmlns:types="http://www.mulesoft.org/schema/mule/types">
+  <types:catalog>
+    <types:type name="inputcsv" format="csv">
+      <types:shape format="weave" example="examples/Input-1.csv"><![CDATA[%dw 2.0
+
+type inputcsv = Array<{|  EmployeeID: String,   EmployeeName: String,   Country: String,   RecordType: String|}> {"isQuotedString": "false",
+"header": "true",
+"headerLineNumber": "0"}
+
+]]></types:shape>
+      <types:properties>
+        <types:property name="headerLineNumber" value="0"/>
+        <types:property name="header" value="true"/>
+        <types:property name="isQuotedString" value="false"/>
+      </types:properties>
+    </types:type>
+    <types:type name="sample" format="java">
+      <types:shape format="raml"><![CDATA[#%RAML 1.0 DataType
+type: string]]></types:shape>
+    </types:type>
+  </types:catalog>
+  <types:enrichment select="#3cba339d-b6ec-413d-bd68-83a5612a2605">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="inputcsv"/>
+        </types:message>
+      </types:input-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#ca9f12db-37c0-4a15-8d91-e585709c4515">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="inputcsv"/>
+        </types:message>
+      </types:input-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#af64f11f-6043-41a6-aeb4-4e484e606019">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="inputcsv"/>
+        </types:message>
+      </types:input-event>
+    </types:processor-declaration>
+  </types:enrichment>
+</types:mule>
